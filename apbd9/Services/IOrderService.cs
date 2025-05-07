@@ -5,6 +5,6 @@ namespace apbd9.Services;
 
 public interface IOrderService
 {
-    public Task<bool> ValidateOrderAsync(int orderId, int productId, int amount, CancellationToken cancellationToken);
-    public Task<int> FulfillOrderAsync(RequestDto requestDto,int price, CancellationToken cancellationToken);
+    public Task<bool> ValidateOrderAsync(int productId, int amount, CancellationToken cancellationToken);
+    public Task<int> FulfillOrderAsync(RequestDto requestDto, float price, CancellationToken cancellationToken);
 }

@@ -14,9 +14,10 @@ public class OrderService : IOrderService
         _orderRepository = orderRepository;
     }
 
-    public async Task<bool> ValidateOrderAsync(int orderId, int productId, int amount,
+    public async Task<bool> ValidateOrderAsync(int productId, int amount,
         CancellationToken cancellationToken)
     {
+        var orderId = await _orderRepository.GetOrderIdByProductAndAmountAsync(productId, amount, cancellationToken);
         var exists = await _orderRepository.CheckIfOrderExistsAsync(productId, amount, cancellationToken);
         var completed = await _orderRepository.CheckIfOrderCompletedAsync(orderId, cancellationToken);
 
@@ -34,7 +35,7 @@ public class OrderService : IOrderService
         return false;
     }
 
-    public async Task<int> FulfillOrderAsync(RequestDto requestDto, int price, CancellationToken cancellationToken)
+    public async Task<int> FulfillOrderAsync(RequestDto requestDto, float price, CancellationToken cancellationToken)
     {
         var orderId =
             await _orderRepository.GetOrderIdByProductAndAmountAsync(requestDto.IdProduct, requestDto.Amount,
