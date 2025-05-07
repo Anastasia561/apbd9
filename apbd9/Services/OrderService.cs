@@ -34,4 +34,11 @@ public class OrderService : IOrderService
         var completedOrder = CompletedOrderMapper.ToCompletedOrder(requestDto, orderId, price);
         return await _orderRepository.FulfillOrderAsync(completedOrder, cancellationToken);
     }
+
+    public async Task<int> FulfillOrderUsingProcedureAsync(RequestDto requestDto,
+        CancellationToken cancellationToken)
+    {
+        return await _orderRepository.FulfillOrderUsingProcedureAsync(requestDto.IdProduct, requestDto.IdWarehouse,
+            requestDto.Amount, requestDto.CreatedAt, cancellationToken);
+    }
 }

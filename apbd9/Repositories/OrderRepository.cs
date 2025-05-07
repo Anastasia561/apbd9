@@ -1,4 +1,5 @@
-﻿using apbd9.Model;
+﻿using System.Data;
+using apbd9.Model;
 using Microsoft.Data.SqlClient;
 
 namespace apbd9.Repositories;
@@ -121,5 +122,24 @@ public class OrderRepository : IOrderRepository
             await transaction.RollbackAsync(cancellationToken);
             throw new ApplicationException(ex.Message);
         }
+    }
+
+    public async Task<int> FulfillOrderUsingProcedureAsync(int productId, int warehouseId, int amount,
+        DateTime createdAt,
+        CancellationToken cancellationToken)
+    {
+        var con = new SqlConnection(_connectionString);
+        var com = new SqlCommand();
+        com.Connection = con;
+        com.CommandText = "AddProductToWarehouse";
+        com.CommandType = CommandType.StoredProcedure;
+        com.Parameters.AddWithValue("@IdProduct", productId);
+        com.Parameters.AddWithValue("@IdWarehouse", warehouseId);
+        com.Parameters.AddWithValue("@CreatedAt", createdAt);
+        com.Parameters.AddWithValue("@Amount", amount);
+        await con.OpenAsync(cancellationToken);
+        var result = (int)await com.ExecuteScalarAsync(cancellationToken);
+        await con.DisposeAsync();
+        return result;
     }
 }

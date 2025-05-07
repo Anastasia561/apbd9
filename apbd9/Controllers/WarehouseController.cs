@@ -33,4 +33,12 @@ public class WarehouseController : ControllerBase
         var result = await _orderService.FulfillOrderAsync(requestDto, price, cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost("proc")]
+    public async Task<IActionResult> FulfillOrderUsingProcedureAsync(RequestDto requestDto,
+        CancellationToken cancellationToken)
+    {
+        var result = await _orderService.FulfillOrderUsingProcedureAsync(requestDto, cancellationToken);
+        return Ok(result);
+    }
 }

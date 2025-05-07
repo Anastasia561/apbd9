@@ -8,4 +8,8 @@ public interface IOrderRepository
     public Task<bool> CheckIfOrderCompletedAsync(int id, CancellationToken cancellationToken);
     public Task<int> GetOrderIdByProductAndAmountAsync(int productId, int amount, CancellationToken cancellationToken);
     public Task<int> FulfillOrderAsync(CompletedOrder completedOrder, CancellationToken cancellationToken);
+
+    public Task<int> FulfillOrderUsingProcedureAsync(int productId, int warehouseId, int amount,
+        DateTime createdAt,
+        CancellationToken cancellationToken);
 }
