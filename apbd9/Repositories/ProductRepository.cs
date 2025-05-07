@@ -34,7 +34,7 @@ public class ProductRepository : IProductRepository
         com.Parameters.AddWithValue("@id", id);
 
         await con.OpenAsync(cancellationToken);
-        var result = (float)await com.ExecuteScalarAsync(cancellationToken);
+        var result = Convert.ToSingle(await com.ExecuteScalarAsync(cancellationToken));
         await con.DisposeAsync();
         return result;
     }

@@ -14,7 +14,6 @@ public class CompletedOrderMapper
             IdOrder = orderId,
             Amount = requestDto.Amount,
             Price = requestDto.Amount * price,
-            CreatedAt = requestDto.CreatedAt
         };
     }
 }

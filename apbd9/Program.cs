@@ -1,3 +1,4 @@
+using apbd9.Middlewares;
 using apbd9.Repositories;
 using apbd9.Services;
 
@@ -25,6 +26,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

@@ -14,9 +14,11 @@ public class OrderRepository : IOrderRepository
 
     public async Task<bool> CheckIfOrderExistsAsync(int productId, int amount, CancellationToken cancellationToken)
     {
-        var con = new SqlConnection();
+        if (!await CheckIfOrderExistsByProductIdAndAmountAsync(productId, amount, cancellationToken)) return false;
+
+        var con = new SqlConnection(_connectionString);
         var com = new SqlCommand();
-        com.CommandText = "select CreatedAt from Order where IdProduct = @productId and Amount = @amount";
+        com.CommandText = "select CreatedAt from [Order] where IdProduct = @productId and Amount = @amount";
         com.Connection = con;
         com.Parameters.AddWithValue("@productId", productId);
         com.Parameters.AddWithValue("@amount", amount);
@@ -33,12 +35,28 @@ public class OrderRepository : IOrderRepository
         return false;
     }
 
+    private async Task<bool> CheckIfOrderExistsByProductIdAndAmountAsync(int productId, int amount,
+        CancellationToken cancellationToken)
+    {
+        var con = new SqlConnection(_connectionString);
+        var com = new SqlCommand();
+        com.CommandText = "select count(*) from [Order] where IdProduct = @productId and Amount = @amount";
+        com.Connection = con;
+        com.Parameters.AddWithValue("@productId", productId);
+        com.Parameters.AddWithValue("@amount", amount);
+
+        await con.OpenAsync(cancellationToken);
+        var result = (int)await com.ExecuteScalarAsync(cancellationToken);
+        await con.DisposeAsync();
+        return result > 0;
+    }
+
     public async Task<int> GetOrderIdByProductAndAmountAsync(int productId, int amount,
         CancellationToken cancellationToken)
     {
-        var con = new SqlConnection();
+        var con = new SqlConnection(_connectionString);
         var com = new SqlCommand();
-        com.CommandText = "select IdOrder from Order where IdProduct = @productId and Amount = @amount";
+        com.CommandText = "select IdOrder from [Order] where IdProduct = @productId and Amount = @amount";
         com.Connection = con;
         com.Parameters.AddWithValue("@productId", productId);
         com.Parameters.AddWithValue("@amount", amount);
@@ -51,7 +69,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task<bool> CheckIfOrderCompletedAsync(int id, CancellationToken cancellationToken)
     {
-        var con = new SqlConnection();
+        var con = new SqlConnection(_connectionString);
         var com = new SqlCommand();
         com.CommandText = "select count(*) from Product_Warehouse where IdOrder=@id";
         com.Connection = con;
@@ -65,7 +83,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task<int> FulfillOrderAsync(CompletedOrder completedOrder, CancellationToken cancellationToken)
     {
-        var con = new SqlConnection();
+        var con = new SqlConnection(_connectionString);
         var com = new SqlCommand();
         com.Connection = con;
         await con.OpenAsync(cancellationToken);
@@ -75,7 +93,7 @@ public class OrderRepository : IOrderRepository
 
         try
         {
-            com.CommandText = "update Order set FulfilledAt=@currDateTime where IdOrder=@id";
+            com.CommandText = "update [Order] set FulfilledAt=@currDateTime where IdOrder=@id";
             var currDateTime = DateTime.Now;
             com.Parameters.AddWithValue("@id", completedOrder.IdOrder);
             com.Parameters.AddWithValue("@currDateTime", currDateTime);
@@ -92,9 +110,8 @@ public class OrderRepository : IOrderRepository
             com.Parameters.AddWithValue("@idOrder", completedOrder.IdOrder);
             com.Parameters.AddWithValue("@amount", completedOrder.Amount);
             com.Parameters.AddWithValue("@price", completedOrder.Price);
-            com.Parameters.AddWithValue("@createdAt", completedOrder.CreatedAt);
+            com.Parameters.AddWithValue("@createdAt", currDateTime);
 
-            await con.OpenAsync(cancellationToken);
             var result = (int)await com.ExecuteScalarAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return result;
