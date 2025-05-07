@@ -24,4 +24,18 @@ public class ProductRepository : IProductRepository
         await con.DisposeAsync();
         return result > 0;
     }
+
+    public async Task<float> GetProductPriceByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        var con = new SqlConnection(_connectionString);
+        var com = new SqlCommand();
+        com.Connection = con;
+        com.CommandText = "select Price from Product where IdProduct = @id";
+        com.Parameters.AddWithValue("@id", id);
+
+        await con.OpenAsync(cancellationToken);
+        var result = (float)await com.ExecuteScalarAsync(cancellationToken);
+        await con.DisposeAsync();
+        return result;
+    }
 }

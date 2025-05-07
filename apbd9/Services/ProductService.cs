@@ -19,4 +19,9 @@ public class ProductService : IProductService
 
         return result;
     }
+
+    public async Task<float> GetProductPriceByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _productRepository.GetProductPriceByIdAsync(id, cancellationToken);
+    }
 }

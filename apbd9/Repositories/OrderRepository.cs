@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using apbd9.Model;
+using Microsoft.Data.SqlClient;
 
 namespace apbd9.Repositories;
 
@@ -60,5 +61,48 @@ public class OrderRepository : IOrderRepository
         var result = (int)await com.ExecuteScalarAsync(cancellationToken);
         await con.DisposeAsync();
         return result > 0;
+    }
+
+    public async Task<int> FulfillOrderAsync(CompletedOrder completedOrder, CancellationToken cancellationToken)
+    {
+        var con = new SqlConnection();
+        var com = new SqlCommand();
+        com.Connection = con;
+        await con.OpenAsync(cancellationToken);
+
+        var transaction = await con.BeginTransactionAsync(cancellationToken);
+        com.Transaction = transaction as SqlTransaction;
+
+        try
+        {
+            com.CommandText = "update Order set FulfilledAt=@currDateTime where IdOrder=@id";
+            var currDateTime = DateTime.Now;
+            com.Parameters.AddWithValue("@id", completedOrder.IdOrder);
+            com.Parameters.AddWithValue("@currDateTime", currDateTime);
+            await com.ExecuteNonQueryAsync(cancellationToken);
+
+            com.Parameters.Clear();
+
+            com.CommandText =
+                "insert into Product_Warehouse(IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)" +
+                "values(@idWarehouse, @idProduct, @idOrder, @amount, @price, @createdAt); select cast(scope_identity() as int);";
+            com.Connection = con;
+            com.Parameters.AddWithValue("@idWarehouse", completedOrder.IdWarehouse);
+            com.Parameters.AddWithValue("@idProduct", completedOrder.IdProduct);
+            com.Parameters.AddWithValue("@idOrder", completedOrder.IdOrder);
+            com.Parameters.AddWithValue("@amount", completedOrder.Amount);
+            com.Parameters.AddWithValue("@price", completedOrder.Price);
+            com.Parameters.AddWithValue("@createdAt", completedOrder.CreatedAt);
+
+            await con.OpenAsync(cancellationToken);
+            var result = (int)await com.ExecuteScalarAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw new ApplicationException(ex.Message);
+        }
     }
 }
